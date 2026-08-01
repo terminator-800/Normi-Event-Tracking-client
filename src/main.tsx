@@ -19,6 +19,7 @@ createRoot(rootEl).render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
+      {/* notifySuccess / notifyError: one toast at a time, fresh pop each call */}
       <Toaster
         position="top-center"
         containerStyle={{

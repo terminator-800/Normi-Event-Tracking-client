@@ -20,7 +20,7 @@ import {
   lookupPublicStudentAttendance,
   type PublicStudentAttendanceResult,
 } from "../hooks/usePublicStudentAttendance";
-import toast from "react-hot-toast";
+import { notifyError, notifySuccess } from "../utils/appToast";
 
 const UPCOMING_EVENTS_PAGE_SIZE = 3;
 const ONGOING_EVENTS_PAGE_SIZE = 1;
@@ -40,8 +40,6 @@ type SubmitAttendanceVariables = {
   attendanceKind: "in" | "out";
   eventId?: string | number;
   eventUnlockToken?: string;
-  simulatedTapTime?: string;
-  simulatedDate?: string;
 };
 
 function sqlTimeToMinutes(value: string | null | undefined): number | null {
@@ -280,17 +278,17 @@ export default function Home() {
       const token = body.unlockToken ?? body.token ?? null;
       const eventId = selectedOngoingEvent?.id;
       if (!token || eventId == null) {
-        toast.error("Unlock failed. Please try again.");
+        notifyError("Unlock failed. Please try again.");
         return;
       }
       setEventUnlockToken(eventId, token);
       setUnlockToken(String(token));
       setEventPasswordInput("");
-      toast.success("Event unlocked. Students can now tap in or out.");
+      notifySuccess("Event unlocked. Students can now tap in or out.");
       window.setTimeout(() => identifierInputRef.current?.focus(), 0);
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Incorrect event password."));
+      notifyError(getApiErrorMessage(error, "Incorrect event password."));
       setEventPasswordInput("");
       eventPasswordInputRef.current?.focus();
     },
@@ -311,7 +309,7 @@ export default function Home() {
       const message = body.message ? String(body.message) : "";
 
       if (status === "time_out_not_active") {
-        toast.error(
+        notifyError(
           message ||
             "Time out is not active yet. Please tap again during the time out schedule.",
         );
@@ -320,7 +318,7 @@ export default function Home() {
       }
 
       if (status === "time_in_cutoff") {
-        toast.error(
+        notifyError(
           message ||
             "Time In Cutoff: attendance was not recorded. Student marked Absent.",
         );
@@ -328,7 +326,7 @@ export default function Home() {
         return;
       }
 
-      toast.success(message || "Attendance submitted successfully.");
+      notifySuccess(message || "Attendance submitted successfully.");
       clearIdentifierInput();
     },
     onError: (error) => {
@@ -336,10 +334,10 @@ export default function Home() {
       if (status === 403 && selectedOngoingEvent?.id != null) {
         clearEventUnlockToken(selectedOngoingEvent.id);
         setUnlockToken(null);
-        toast.error(getApiErrorMessage(error, "Event session expired. Enter the password again."));
+        notifyError(getApiErrorMessage(error, "Event session expired. Enter the password again."));
         return;
       }
-      toast.error(getApiErrorMessage(error, "Failed to submit attendance."));
+      notifyError(getApiErrorMessage(error, "Failed to submit attendance."));
       clearIdentifierInput();
     },
   });
